@@ -1,0 +1,51 @@
+holidays =r"C:\Users\ss186102\Desktop\ZS hackathon\dataset\holidays.xlsx"
+
+yds_train2018 =r"C:\Users\ss186102\Desktop\ZS hackathon\dataset\yds_train2018.csv"
+yds_test2018 =r"C:\Users\ss186102\Desktop\ZS hackathon\dataset\yds_test2018.csv"
+expense =r"C:\Users\ss186102\Desktop\ZS hackathon\dataset\promotional_expense.csv"
+
+
+import numpy as np
+import pandas as pd
+
+holidays = pd.read_excel(holidays)
+yds_train2018= pd.read_csv(yds_train2018)
+yds_test2018 = pd.read_csv(yds_test2018)
+expense = pd.read_csv(expense)
+
+
+a1 = yds_train2018[['Year','Month','Product_ID','Country','Sales']]
+
+a2= a1.groupby(by= ['Year','Month','Product_ID','Country']).sum()
+
+
+a3= pd.DataFrame(a2).reset_index(inplace=True)
+a2.reset_index(inplace=True)
+
+a2.drop('index',axis =1 ,inplace =True)
+
+a3 = pd.DataFrame(a2)
+a3["Country"] = a3["Country"].astype('category')
+a3["Country"] = a3["Country"].cat.codes
+
+X=a3.iloc[:,0:4]
+y= a3.iloc[:,4]
+
+from sklearn.ensemble import RandomForestRegressor
+clf = RandomForestRegressor(max_depth=2, random_state=0)
+clf.fit(X,y)
+
+
+y1=yds_test2018.drop('S_No',axis=1)
+y1.drop('Sales',axis = 1,inplace=True)
+
+y1["Country"] = y1["Country"].astype('category')
+y1["Country"] = y1["Country"].astype('category').cat.codes
+
+y1_result = clf.predict(y1)
+yds_test2018['Sal1']=y1_result
+
+yds_test2018.drop('Sales',axis = 1,inplace=True)
+yds_test2018.rename(columns= {'Sal1':'Sales'},inplace=True)
+
+yds_test2018.to_csv(r"C:\Users\ss186102\Desktop\ZS hackathon\dataset\result.csv")

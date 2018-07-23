@@ -1,0 +1,103 @@
+holidays =r"C:\Users\ss186102\Desktop\ZS hackathon\dataset\holidays.xlsx"
+
+yds_train2018 =r"C:\Users\ss186102\Desktop\ZS hackathon\dataset\yds_train2018.csv"
+yds_test2018 =r"C:\Users\ss186102\Desktop\ZS hackathon\dataset\yds_test2018.csv"
+expense =r"C:\Users\ss186102\Desktop\ZS hackathon\dataset\promotional_expense.csv"
+
+
+import numpy as np
+import pandas as pd
+
+holidays = pd.read_excel(holidays)
+yds_train2018= pd.read_csv(yds_train2018)
+yds_test2018 = pd.read_csv(yds_test2018)
+expense = pd.read_csv(expense)
+
+
+
+holidays['Year'] = holidays.Date.apply(lambda x: x.split(",")[0])
+holidays['Month'] = holidays.Date.apply(lambda x: x.split(",")[1])
+holidays['Day'] = holidays.Date.apply(lambda x: x.split(",")[2])
+holidays = holidays.iloc[:,1:]
+holidays['Month']= holidays['Month'].astype('int32')
+holidays['Year']= holidays['Year'].astype('int32')
+holidays['Day']= holidays['Day'].astype('int32')
+holidays['Week'] = pd.to_datetime(holidays[['Year', 'Month', 'Day']]).dt.week
+holidays = holidays.drop('Day',axis= 1)
+
+expense.rename(columns = {'Product_Type':'Product_ID'},inplace=True)
+join_data = pd.merge(expense,yds_train2018,on=['Year','Month','Country','Product_ID'],how='right')
+
+h1=holidays.groupby(by=['Country','Year','Month']).count()
+h1.reset_index(inplace=True)
+h1.drop('Week',axis=1,inplace=True)
+join_data1 = pd.merge(h1,join_data,on=['Year','Month','Country'],how='right')
+join_data2= join_data1[['Country','Year','Month','Holiday','Product_ID','Expense_Price','Sales']]
+
+final_data= join_data2.groupby(by=['Country','Year','Month','Holiday','Product_ID','Expense_Price']).sum()
+final_data.reset_index(inplace=True)
+
+final_data.Month = final_data.Month.astype('str')
+final_data.Year = final_data.Year.astype('str')
+final_data['period'] = final_data[['Year','Month']].apply(lambda x: '-'.join(x), axis=1)
+dateparse = lambda dates: pd.datetime.strptime(dates, '%Y-%m')
+final_data['period']= final_data['period'].apply(dateparse)
+
+final_data.Month = final_data.Month.astype('int')
+final_data.Year = final_data.Year.astype('int')
+
+
+
+Arg_train=final_data[final_data.Country =='Argentina']
+Arg_train_X=Arg_train[['Month','Holiday','Expense_Price']]
+Arg_train_y = Arg_train[['Sales']]
+from sklearn.ensemble import RandomForestRegressor
+clf = RandomForestRegressor(max_depth=2, random_state=0)
+clf.fit(X=Arg_train_X,y=Arg_train_y)
+test_join_data = pd.merge(expense,yds_test2018,on=['Year','Month','Country','Product_ID'],how='right')
+test_join_data1 = pd.merge(h1,test_join_data,on=['Year','Month','Country'],how='right')
+test_join_data2= test_join_data1 [['Country','Year','Month','Holiday','Product_ID','Expense_Price']]
+Arg_test = test_join_data2[test_join_data2.Country =='Argentina']
+Arg_test_X=Arg_test[['Month','Holiday','Expense_Price']]
+Arg_test_X['Holiday'].fillna(0,inplace = True)
+Arg_test_X['Expense_Price'].fillna(0,inplace = True)
+Arg_test_predict = clf.predict(Arg_test_X)
+Arg_test_X['Sales'] = Arg_test_predict
+Arg_test_X.to_csv(r"C:\Users\ss186102\Desktop\ZS hackathon\dataset\Argentina.csv")
+
+
+
+Arg_train=final_data[final_data.Country =='Columbia']
+Arg_train_X=Arg_train[['Month','Holiday','Expense_Price']]
+Arg_train_y = Arg_train[['Sales']]
+from sklearn.ensemble import RandomForestRegressor
+clf = RandomForestRegressor(max_depth=2, random_state=0)
+clf.fit(X=Arg_train_X,y=Arg_train_y)
+test_join_data = pd.merge(expense,yds_test2018,on=['Year','Month','Country','Product_ID'],how='right')
+test_join_data1 = pd.merge(h1,test_join_data,on=['Year','Month','Country'],how='right')
+test_join_data2= test_join_data1 [['Country','Year','Month','Holiday','Product_ID','Expense_Price']]
+Arg_test = test_join_data2[test_join_data2.Country =='Columbia']
+Arg_test_X=Arg_test[['Month','Holiday','Expense_Price']]
+Arg_test_X['Holiday'].fillna(0,inplace = True)
+Arg_test_X['Expense_Price'].fillna(0,inplace = True)
+Arg_test_predict = clf.predict(Arg_test_X)
+Arg_test['Sales'] = Arg_test_predict
+Arg_test.to_csv(r"C:\Users\ss186102\Desktop\ZS hackathon\dataset\Columbia.csv")
+
+
+Arg_train=final_data[final_data.Country =='Finland']
+Arg_train_X=Arg_train[['Month','Holiday','Expense_Price']]
+Arg_train_y = Arg_train[['Sales']]
+from sklearn.ensemble import RandomForestRegressor
+clf = RandomForestRegressor(max_depth=2, random_state=0)
+clf.fit(X=Arg_train_X,y=Arg_train_y)
+test_join_data = pd.merge(expense,yds_test2018,on=['Year','Month','Country','Product_ID'],how='right')
+test_join_data1 = pd.merge(h1,test_join_data,on=['Year','Month','Country'],how='right')
+test_join_data2= test_join_data1 [['Country','Year','Month','Holiday','Product_ID','Expense_Price']]
+Arg_test = test_join_data2[test_join_data2.Country =='Finland']
+Arg_test_X=Arg_test[['Month','Holiday','Expense_Price']]
+Arg_test_X['Holiday'].fillna(0,inplace = True)
+Arg_test_X['Expense_Price'].fillna(0,inplace = True)
+Arg_test_predict = clf.predict(Arg_test_X)
+Arg_test_X['Sales'] = Arg_test_predict
+Arg_test_X.to_csv(r"C:\Users\ss186102\Desktop\ZS hackathon\dataset\Finland.csv")
